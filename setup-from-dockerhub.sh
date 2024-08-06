@@ -27,25 +27,25 @@ cd -
 echo "Cloning Gateway..."
 git clone git@github.com:miloskec/gateway.git
 cd gateway
-git checkout production-prepare
+git checkout dockerhub-example
 cp .env.example .env
 cd -
 echo "Cloning Authentication..."
 git clone git@github.com:miloskec/authentication.git
 cd authentication
-git checkout production-prepare
+git checkout dockerhub-example
 cp .env.example .env
 cd -
 echo "Cloning Authorization..."
 git clone git@github.com:miloskec/authorization.git
 cd authorization
-git checkout production-prepare
+git checkout dockerhub-example
 cp .env.example .env
 cd -
 echo "Cloning Profile..."
 git clone git@github.com:miloskec/profile.git
 cd profile
-git checkout production-prepare
+git checkout dockerhub-example
 cp .env.example .env
 cd -
 echo "Cloning Datadog..."
