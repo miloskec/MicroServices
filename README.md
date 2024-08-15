@@ -9,3 +9,7 @@ Follow these steps to properly execute the setup script:
 - **Update Environment Files:** When prompted, update the .env files located inside each project directory. 
 - **Confirm Completion:** After updating the .env files, return to the console and confirm that the updates are complete. 
 - **Finalize Setup:** The script will then continue to finalize the setup process. 
+
+## Script usages
+- **setup.sh** should be used when you want to build images and to use those local images
+- **setup-from-dockerhub.sh** should be used in case that you want to use already created images (dokcerhub)
