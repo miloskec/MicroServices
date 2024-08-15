@@ -13,3 +13,6 @@ Follow these steps to properly execute the setup script:
 ## Script usages
 - **setup.sh** should be used when you want to build images and to use those local images
 - **setup-from-dockerhub.sh** should be used in case that you want to use already created images (dokcerhub)
+- **clone-all-set-kubernetes-branch.sh** should be used to clone project repos and to set to the kubernetes related branch
+- **kubernetes-setup.sh** should be used to setup kubernetes project(s) (yaml files and specific commands per project)
+- **kubernetes-remove-services.sh** should be used to "uninstall" kubernetes project(s) (remove resources using yaml files/reverse)
