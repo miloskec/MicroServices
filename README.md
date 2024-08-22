@@ -33,7 +33,7 @@ Please have in mind that in order to run **kubernetes-setup.sh** as a multinode 
       ```
       You  can then check if everything is set as expected:
       ```sh
-      kubectl get pods --field-selector spec.nodeName=multinode-m06 --all-namespaces
+      kubectl get pods # --field-selector spec.nodeName=multinode-mXX --all-namespaces
       ```
    - 
 - switch to the **kubernetes-nodes-example** in every repository
