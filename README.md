@@ -33,7 +33,37 @@ Please have in mind that in order to run **kubernetes-setup.sh** as a multinode 
       ```
       You  can then check if everything is set as expected:
       ```sh
-      kubectl get pods # --field-selector spec.nodeName=multinode-mXX --all-namespaces
+      kubectl get nodes
+      NAME            STATUS   ROLES           AGE    VERSION
+      multinode       Ready    control-plane   0d1h   v1.30.0
+      multinode-m02   Ready    <none>          0d1h   v1.30.0
+      multinode-m03   Ready    <none>          0d1h   v1.30.0
+      multinode-m04   Ready    <none>          0d1h   v1.30.0
+      multinode-m05   Ready    <none>          0d1h   v1.30.0
+      multinode-m06   Ready    <none>          0d1h   v1.30.0
       ```
-   - 
 - switch to the **kubernetes-nodes-example** in every repository
+
+  Once when kubernetes-setup.sh finish you should get something like:
+  ```sh
+  kubectl get pods
+  NAME                                              READY   STATUS    RESTARTS        
+  authentication-deployment-6cd66c7874-v9w8t        1/1     Running   1 (107s ago)    
+  authorization-deployment-bd6844d74-9p795          1/1     Running   2 (100s ago)    
+  datadog-agent-2mknx                               1/1     Running   2 (86s ago)     
+  datadog-agent-4qwdj                               1/1     Running   2 (2m12s ago)   
+  datadog-agent-b99tz                               1/1     Running   2 (107s ago)    
+  datadog-agent-k9mk9                               1/1     Running   2 (100s ago)    
+  datadog-agent-pcdfb                               1/1     Running   2 (93s ago)     
+  datadog-agent-rttkb                               1/1     Running   2 (114s ago)    
+  gateway-deployment-799d4956-v74kj                 1/1     Running   2 (114s ago)    
+  kafka-deployment-d7875c446-hv567                  1/1     Running   2 (86s ago)     
+  memcached-deployment-5cbc9cfcdc-ztdqh             1/1     Running   2 (114s ago)    
+  mysql-authent-deployment-6945d54fbd-vffwb         1/1     Running   2 (107s ago)    
+  mysql-authorization-deployment-7cfc847646-47lms   1/1     Running   2 (100s ago)    
+  mysql-deployment-5b9976cdc-9xprf                  1/1     Running   2 (114s ago)    
+  mysql-profile-deployment-7989b64df8-z26xh         1/1     Running   2 (93s ago)     
+  profile-deployment-5c6b78dcb-qfnz6                1/1     Running   2 (93s ago)     
+  zookeeper-deployment-b756855fd-v8v76              1/1     Running   2 (86s ago)     
+  ```
+  
