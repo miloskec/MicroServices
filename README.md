@@ -16,3 +16,24 @@ Follow these steps to properly execute the setup script:
 - **clone-all-set-kubernetes-branch.sh** should be used to clone project repos and to set to the kubernetes related branch
 - **kubernetes-setup.sh** should be used to setup kubernetes project(s) (yaml files and specific commands per project)
 - **kubernetes-remove-services.sh** should be used to "uninstall" kubernetes project(s) (remove resources using yaml files/reverse)
+
+## Multinode setup 
+Please have in mind that in order to run kubernetes-setup.sh as a multinode setup you will need to: 
+- prepare kubernetes multinode profile
+  - Ensure you are using the Node authorizer and have enabled the NodeRestriction admission plugin.
+  - Add labels with the node-restriction.kubernetes.io/ prefix to your nodes, and use those labels in your node selectors.
+    - ```sh
+      minikube start --nodes 6 -p multinode --extra-config=apiserver.enable-admission-plugins=NodeRestriction
+  
+      kubectl label nodes multinode-m02 node-restriction.kubernetes.io/gateway=true
+      kubectl label nodes multinode-m03 node-restriction.kubernetes.io/authentication=true
+      kubectl label nodes multinode-m04 node-restriction.kubernetes.io/authorization=true
+      kubectl label nodes multinode-m05 node-restriction.kubernetes.io/profile=true
+      kubectl label nodes multinode-m06 node-restriction.kubernetes.io/kafka=true
+      ```
+      You  can then check if everything is set as expected:
+      ```sh
+      kubectl get pods --field-selector spec.nodeName=multinode-m06 --all-namespaces
+      ```
+   - 
+- switch to the **kubernetes-nodes-example** in every repository
