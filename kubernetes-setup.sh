@@ -13,6 +13,17 @@ apply_k8s_configs() {
     done
 }
 
+# Function to wait for MySQL service to become ready
+wait_for_mysql() {
+    local service=$1
+    echo "Waiting for service $service to be ready..."
+    kubectl wait --for=condition=ready pod -l app=$service --timeout=300s
+    if [ $? -ne 0 ]; then
+        echo "Timeout waiting for $service to become ready"
+        exit 1
+    fi
+}
+
 # Function to create topics in Kafka
 create_kafka_topics() {
     local pod_name=$(kubectl get pod -l app=kafka -o jsonpath='{.items[0].metadata.name}')
@@ -70,10 +81,23 @@ main() {
     check_secret
     # Kafka
     apply_k8s_configs "kafka" zookeeper-deployment-service.yaml kafka-deployment-service.yaml
-    apply_k8s_configs "gateway" memcached-deployment-service.yaml mysql-gateway-deployment-service.yaml gateway-deployment-service.yaml
-    apply_k8s_configs "authentication" mysql-authentication-deployment-service.yaml authentication-deployment-service.yaml
-    apply_k8s_configs "authorization" mysql-authorization-deployment-service.yaml authorization-deployment-service.yaml
-    apply_k8s_configs "profile" mysql-profile-deployment-service.yaml profile-deployment-service.yaml
+    # Gateway
+    apply_k8s_configs "gateway" memcached-deployment-service.yaml mysql-gateway-deployment-service.yaml 
+    wait_for_mysql "mysql-service"
+    apply_k8s_configs "gateway" gateway-deployment-service.yaml
+    # Authentication
+    apply_k8s_configs "authentication" mysql-authentication-deployment-service.yaml 
+    wait_for_mysql "mysql-authent-service"
+    apply_k8s_configs "authentication" authentication-deployment-service.yaml
+    # Authorization
+    apply_k8s_configs "authorization" mysql-authorization-deployment-service.yaml 
+    wait_for_mysql "mysql-authorization-service"
+    apply_k8s_configs "authorization" authorization-deployment-service.yaml
+    # Profile
+    apply_k8s_configs "profile" mysql-profile-deployment-service.yaml 
+    wait_for_mysql "mysql-profile-service"
+    apply_k8s_configs "profile" profile-deployment-service.yaml
+    # Datadog
     apply_k8s_configs "datadog" datadoghq.com_datadogagents.yaml 
     sleep 30
     apply_k8s_configs "datadog" datadog-agent-clusterrole.yaml datadog-agent-clusterrolebinding.yaml
