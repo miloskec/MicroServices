@@ -17,6 +17,7 @@ apply_k8s_configs() {
 wait_for_mysql() {
     local service=$1
     echo "Waiting for service $service to be ready..."
+    sleep 10
     kubectl wait --for=condition=ready pod -l app=$service --timeout=300s
     if [ $? -ne 0 ]; then
         echo "Timeout waiting for $service to become ready"
@@ -74,6 +75,12 @@ check_secret() {
         echo "Secret datadog-secret does not exist in the namespace default."
         exit 1
     fi
+    if kubectl get secret mysql-secret -n default > /dev/null 2>&1; then
+        echo "Secret mysql-secret exists in the namespace default."
+    else
+        echo "Secret mysql-secret does not exist in the namespace default."
+        exit 1
+    fi
 }
 # Main script execution
 main() {
@@ -83,19 +90,19 @@ main() {
     apply_k8s_configs "kafka" zookeeper-deployment-service.yaml kafka-deployment-service.yaml
     # Gateway
     apply_k8s_configs "gateway" memcached-deployment-service.yaml mysql-gateway-deployment-service.yaml 
-    wait_for_mysql "mysql-service"
+    wait_for_mysql "mysql"
     apply_k8s_configs "gateway" gateway-deployment-service.yaml
     # Authentication
     apply_k8s_configs "authentication" mysql-authentication-deployment-service.yaml 
-    wait_for_mysql "mysql-authent-service"
+    wait_for_mysql "mysql-authentication"
     apply_k8s_configs "authentication" authentication-deployment-service.yaml
     # Authorization
     apply_k8s_configs "authorization" mysql-authorization-deployment-service.yaml 
-    wait_for_mysql "mysql-authorization-service"
+    wait_for_mysql "mysql-authorization"
     apply_k8s_configs "authorization" authorization-deployment-service.yaml
     # Profile
     apply_k8s_configs "profile" mysql-profile-deployment-service.yaml 
-    wait_for_mysql "mysql-profile-service"
+    wait_for_mysql "mysql-profile"
     apply_k8s_configs "profile" profile-deployment-service.yaml
     # Datadog
     apply_k8s_configs "datadog" datadoghq.com_datadogagents.yaml 
@@ -103,14 +110,17 @@ main() {
     apply_k8s_configs "datadog" datadog-agent-clusterrole.yaml datadog-agent-clusterrolebinding.yaml
     sleep 30
     apply_k8s_configs "datadog" datadog-daemon-set.yaml
-    # Run the code after 2 minutes to ensure that the services are up and running
+    # Run the code after 30 seconds to ensure that the services are up and running
     sleep 30
     create_kafka_topics
     # Run the code after 1 minute to ensure that the kafka is configured up and running
-    sleep 60
+    wait_for_mysql "gateway"
     setup_service gateway
+    wait_for_mysql "authentication"
     setup_service authentication
+    wait_for_mysql "authorization"
     setup_service authorization
+    wait_for_mysql "profile"
     setup_service profile
 }
 
