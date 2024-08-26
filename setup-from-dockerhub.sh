@@ -12,6 +12,37 @@ check_create_network() {
   fi
 }
 
+# Function to wait until all containers in a specified Docker Compose project are healthy
+wait_until_all_services_healthy() {
+    local project_name=$1
+    local all_healthy=false
+
+    echo "Waiting for all services in the project '$project_name' to become healthy..."
+
+    while [ "$all_healthy" != "true" ]; do
+        all_healthy=true
+        # Fetch all container IDs from your docker-compose project
+        containers=$(docker-compose -p "$project_name" ps -q)
+
+        for container in $containers; do
+            health_status=$(docker inspect --format '{{.State.Health.Status}}' "$container")
+            # Check if the health status is not healthy
+            if [ "$health_status" != "healthy" ]; then
+                all_healthy=false
+                echo "Container $container is not healthy yet: $health_status"
+                break
+            fi
+        done
+
+        if [ "$all_healthy" != "true" ]; then
+            echo "Not all services are healthy yet. Waiting..."
+            sleep 5
+        fi
+    done
+
+    echo "All services in the project '$project_name' are healthy."
+}
+
 if ping -c 4 "8.8.8.8" > /dev/null; then
   echo "Starting..."
 else
@@ -77,12 +108,7 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     cd gateway
     echo "Building gateway service..."
     docker-compose -f docker-compose.dev.yml up -d --build
-    echo "Waiting for services in gateway to be healthy..."
-    while ! docker-compose -f docker-compose.dev.yml ps | grep -q 'healthy'; do
-      sleep 10
-    done
-    echo "Services in gateway are healthy"
-    sleep 5
+    wait_until_all_services_healthy "gateway"
     echo "Migrating data..."
     docker exec gateway-gateway-1 bash -c "php artisan migrate" 
     echo "Done."
@@ -90,12 +116,7 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     cd authentication
     echo "Building authentication service..."
     docker-compose -f docker-compose.dev.yml up -d --build
-    echo "Waiting for services in authentication to be healthy..."
-    while ! docker-compose -f docker-compose.dev.yml ps | grep -q 'healthy'; do
-      sleep 10
-    done
-    echo "Services in authentication are healthy"
-    sleep 5
+    wait_until_all_services_healthy "authentication"
     echo "Migrating data..."
     docker exec authentication-authentication-1 bash -c "php artisan migrate" 
     echo "Running the queue..."
@@ -105,12 +126,7 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     cd authorization
     echo "Building authorization service..."
     docker-compose -f docker-compose.dev.yml up -d --build
-    echo "Waiting for services in authorization to be healthy..."
-    while ! docker-compose -f docker-compose.dev.yml ps | grep -q 'healthy'; do
-      sleep 10
-    done
-    echo "Services in authorization are healthy"
-    sleep 5
+    wait_until_all_services_healthy "authorization"
     echo "Migrating data..."
     docker exec authorization-authorization-1 bash -c "php artisan migrate" 
     echo "Seeding data..."
@@ -122,12 +138,7 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     cd profile
     echo "Building profile service..."
     docker-compose -f docker-compose.dev.yml up -d --build
-    echo "Waiting for services in profile to be healthy..."
-    while ! docker-compose -f docker-compose.dev.yml ps | grep -q 'healthy'; do
-      sleep 10
-    done
-    echo "Services in profile are healthy"
-    sleep 5
+    wait_until_all_services_healthy "profile"
     echo "Migrating data..."
     docker exec profile-profile-1 bash -c "php artisan migrate" 
     echo "Setting the Kafka consumer..."
