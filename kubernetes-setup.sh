@@ -81,6 +81,12 @@ check_secret() {
         echo "Secret mysql-secret does not exist in the namespace default."
         exit 1
     fi
+    if kubectl get secret mail-secret -n default > /dev/null 2>&1; then
+        echo "Secret mail-secret exists in the namespace default."
+    else
+        echo "Secret mail-secret does not exist in the namespace default."
+        exit 1
+    fi
 }
 # Main script execution
 main() {
