@@ -55,6 +55,12 @@ git clone git@github.com:miloskec/kafka.git
 cd kafka
 cp .env.example .env
 cd -
+echo "Cloning Open AppSec..."
+git clone git@github.com:miloskec/openappsec.git
+cd openappsec
+git checkout production-prepare
+cp .env.example .env
+cd -
 echo "Cloning Gateway..."
 git clone git@github.com:miloskec/gateway.git
 cd gateway
@@ -104,6 +110,10 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     echo "Setting the topic..."
     docker exec kafka /bin/bash -c "kafka-topics.sh --create --topic user_created_topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  2>/dev/null" 
     echo "Done."
+    cd -
+    cd openappsec
+    echo "Building openappsec service..."
+    docker-compose -f docker-compose.yaml up -d --build
     cd -
     cd gateway
     echo "Building gateway service..."
