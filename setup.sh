@@ -111,10 +111,6 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     docker exec kafka /bin/bash -c "kafka-topics.sh --create --topic user_created_topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1  2>/dev/null" 
     echo "Done."
     cd -
-    cd openappsec
-    echo "Building openappsec service..."
-    docker-compose -f docker-compose.yaml up -d --build
-    cd -
     cd gateway
     echo "Building gateway service..."
     docker build -f ./docker/Dockerfile --build-arg APP_TIMEZONE=CET --build-arg WWWGROUP=1000 --no-cache  --progress=plain -t gateway . 
@@ -124,6 +120,10 @@ if [[ "$lowercase_answer" == "yes" ]] || [[ "${lowercase_answer:0:1}" == "y" ]];
     echo "Migrating data..."
     docker exec gateway-gateway-1 bash -c "php artisan migrate" 
     echo "Done."
+    cd -
+    cd openappsec
+    echo "Building openappsec service..."
+    docker-compose -f docker-compose.yaml up -d --build
     cd -
     cd authentication
     echo "Building authentication service..."
