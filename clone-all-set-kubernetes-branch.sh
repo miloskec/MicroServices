@@ -33,7 +33,7 @@ for repo in "${repos[@]}"; do
     git clone git@github.com:miloskec/${repo}.git
     cd ${repo}
     # check if with_ingress is true and branch_name is kubernetes-example
-    if [[ "$with_ingress" == "true" && "$branch_name" == "kubernetes-example" ]]; then
+    if [[ "$repo" == "gateway" && "$with_ingress" == "true" && "$branch_name" == "kubernetes-example" ]]; then
         git checkout kubernetes-ingress-example
     else
         git checkout $branch_name
