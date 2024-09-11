@@ -106,18 +106,13 @@ check_config() {
 }
 # Main script execution
 main() {
-    with_ingress="false"
-    if [[ "$install_with_ingress" == "yes" ]]; then
-        echo "Note: Ingress must be enabled for Minikube before proceeding."
-        echo "You can enable it by running: minikube addons enable ingress"
-        with_ingress="true"
-    else
-        echo "Proceeding without Ingress."
-    fi
-
     # Check if secret and configs are set
     check_secret
     # check_config
+    # Ask if the user wants to install with Ingress
+    echo "Do you want to install with Ingress? (yes/no)"
+    read install_with_ingress
+
     # Kafka
     apply_k8s_configs "kafka" zookeeper-deployment-service.yaml kafka-deployment-service.yaml
     # Gateway
@@ -157,11 +152,11 @@ main() {
     setup_service profile
     echo "All services are set up successfully."
     # Gateway Ingress
-    if [[ "$with_ingress" == "true" ]]; then
+    if [[ "$install_with_ingress" == "yes" ]]; then
         echo "Applying Gateway Ingress..."
         apply_k8s_configs "gateway" gateway-ingress.yaml
     fi
-    
+
 }
 
 # Run the main function
