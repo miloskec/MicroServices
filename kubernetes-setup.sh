@@ -28,7 +28,7 @@ wait_for_service() {
 # Function to create topics in Kafka
 create_kafka_topics() {
     local pod_name=$(kubectl get pod -l app=kafka -o jsonpath='{.items[0].metadata.name}')
-    kubectl exec "$pod_name" -- kafka-topics.sh --create --topic user_created_topic --bootstrap-server kafka-service:9092 --partitions 1 --replication-factor 1  2>/dev/null
+    kubectl exec "$pod_name" -- kafka-topics.sh --create --topic user_created_topic --bootstrap-server kafka-service:9092 --partitions 1 --replication-factor 1 2>/dev/null
 }
 
 # Function to set up services (gateway, authentication, etc.)
@@ -44,8 +44,8 @@ setup_service() {
         local log_file="${service}_setup.log"
         local output_file="${service}_output.log"
         local command="php artisan queue:work"
-        
-        kubectl exec "$pod_name" -- nohup $command >> "$log_file" 2>&1 > "$output_file" 2>&1 &
+
+        kubectl exec "$pod_name" -- nohup $command >>"$log_file" 2>&1 >"$output_file" 2>&1 &
     elif [[ "$service" == "authorization" ]]; then
         local log_file="authorization_setup.log"
         local output_file="autz_output.log"
@@ -56,32 +56,32 @@ setup_service() {
 
         # Then start consuming Kafka messages
         command="php artisan app:consume-kafka-messages"
-        kubectl exec "$pod_name" -- nohup $command >> "$log_file" 2>&1 > "$output_file" 2>&1 &
+        kubectl exec "$pod_name" -- nohup $command >>"$log_file" 2>&1 >"$output_file" 2>&1 &
     elif [[ "$service" == "profile" ]]; then
         local log_file="profile_setup.log"
         local output_file="profile_output.log"
 
         local command="php artisan app:consume-kafka-messages"
 
-        kubectl exec "$pod_name" -- nohup $command >> "$log_file" 2>&1 > "$output_file" 2>&1 &
+        kubectl exec "$pod_name" -- nohup $command >>"$log_file" 2>&1 >"$output_file" 2>&1 &
     fi
 }
 
 # Function to check if the secret exists
 check_secret() {
-    if kubectl get secret datadog-secret -n default > /dev/null 2>&1; then
+    if kubectl get secret datadog-secret -n default >/dev/null 2>&1; then
         echo "Secret datadog-secret exists in the namespace default."
     else
         echo "Secret datadog-secret does not exist in the namespace default."
         exit 1
     fi
-    if kubectl get secret mysql-secret -n default > /dev/null 2>&1; then
+    if kubectl get secret mysql-secret -n default >/dev/null 2>&1; then
         echo "Secret mysql-secret exists in the namespace default."
     else
         echo "Secret mysql-secret does not exist in the namespace default."
         exit 1
     fi
-    if kubectl get secret mail-secret -n default > /dev/null 2>&1; then
+    if kubectl get secret mail-secret -n default >/dev/null 2>&1; then
         echo "Secret mail-secret exists in the namespace default."
     else
         echo "Secret mail-secret does not exist in the namespace default."
@@ -90,14 +90,14 @@ check_secret() {
 }
 
 check_config() {
-    if kubectl get configmap nginx-scripts-config -n default > /dev/null 2>&1; then
+    if kubectl get configmap nginx-scripts-config -n default >/dev/null 2>&1; then
         echo "Configmap nginx-scripts-config exists in the namespace default."
     else
         echo "Configmap nginx-scripts-config does not exist in the namespace default."
         exit 1
     fi
 
-    if kubectl get configmap local-config -n default > /dev/null 2>&1; then
+    if kubectl get configmap local-config -n default >/dev/null 2>&1; then
         echo "Configmap local-config exists in the namespace default."
     else
         echo "Configmap local-config does not exist in the namespace default."
@@ -106,30 +106,39 @@ check_config() {
 }
 # Main script execution
 main() {
+    with_ingress="false"
+    if [[ "$install_with_ingress" == "yes" ]]; then
+        echo "Note: Ingress must be enabled for Minikube before proceeding."
+        echo "You can enable it by running: minikube addons enable ingress"
+        with_ingress="true"
+    else
+        echo "Proceeding without Ingress."
+    fi
+
     # Check if secret and configs are set
     check_secret
     # check_config
     # Kafka
     apply_k8s_configs "kafka" zookeeper-deployment-service.yaml kafka-deployment-service.yaml
     # Gateway
-    apply_k8s_configs "gateway" memcached-deployment-service.yaml mysql-gateway-deployment-service.yaml 
+    apply_k8s_configs "gateway" memcached-deployment-service.yaml mysql-gateway-deployment-service.yaml
     wait_for_service "mysql"
     apply_k8s_configs "gateway" gateway-deployment-service.yaml
-    
+
     # Authentication
-    apply_k8s_configs "authentication" mysql-authentication-deployment-service.yaml 
+    apply_k8s_configs "authentication" mysql-authentication-deployment-service.yaml
     wait_for_service "mysql-authentication"
     apply_k8s_configs "authentication" authentication-deployment-service.yaml
     # Authorization
-    apply_k8s_configs "authorization" mysql-authorization-deployment-service.yaml 
+    apply_k8s_configs "authorization" mysql-authorization-deployment-service.yaml
     wait_for_service "mysql-authorization"
     apply_k8s_configs "authorization" authorization-deployment-service.yaml
     # Profile
-    apply_k8s_configs "profile" mysql-profile-deployment-service.yaml 
+    apply_k8s_configs "profile" mysql-profile-deployment-service.yaml
     wait_for_service "mysql-profile"
     apply_k8s_configs "profile" profile-deployment-service.yaml
     # Datadog
-    apply_k8s_configs "datadog" datadoghq.com_datadogagents.yaml 
+    apply_k8s_configs "datadog" datadoghq.com_datadogagents.yaml
     sleep 30
     apply_k8s_configs "datadog" datadog-agent-clusterrole.yaml datadog-agent-clusterrolebinding.yaml
     sleep 30
@@ -148,8 +157,11 @@ main() {
     setup_service profile
     echo "All services are set up successfully."
     # Gateway Ingress
-    echo "Applying Gateway Ingress..."
-    apply_k8s_configs "gateway" gateway-ingress.yaml
+    if [[ "$with_ingress" == "true" ]]; then
+        echo "Applying Gateway Ingress..."
+        apply_k8s_configs "gateway" gateway-ingress.yaml
+    fi
+    
 }
 
 # Run the main function
