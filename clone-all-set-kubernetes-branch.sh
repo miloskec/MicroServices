@@ -34,7 +34,7 @@ for repo in "${repos[@]}"; do
     cd ${repo}
     # check if with_ingress is true and branch_name is kubernetes-example
     if [[ "$repo" == "gateway" && "$with_ingress" == "true" && "$branch_name" == "kubernetes-example" ]]; then
-        git checkout kubernetes-ingress-example
+        git checkout kubernetes-example-open-appsec-prepared
     else
         git checkout $branch_name
     fi
