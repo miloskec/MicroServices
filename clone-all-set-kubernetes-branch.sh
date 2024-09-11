@@ -4,8 +4,7 @@ set -e
 
 # Prompt user to select a branch
 echo "Please select a branch number for cloning the repositories:"
-select branch_name in "kubernetes-example" "kubernetes-nodes-example"
-do
+select branch_name in "kubernetes-example" "kubernetes-nodes-example"; do
     if [[ -n $branch_name ]]; then
         echo "You selected $branch_name"
         break
@@ -14,14 +13,31 @@ do
     fi
 done
 
+# Ask if the user wants to install with Ingress
+echo "Do you want to install with Ingress? (yes/no)"
+read install_with_ingress
+
+with_ingress= false
+if [[ "$install_with_ingress" == "yes" ]]; then
+    echo "Note: Ingress must be enabled for Minikube before proceeding."
+    echo "You can enable it by running: minikube addons enable ingress"
+    with_ingress= true
+else
+    echo "Proceeding without Ingress."
+fi
+
 repos=("kafka" "gateway" "authentication" "authorization" "profile")
 
-for repo in "${repos[@]}"
-do
+for repo in "${repos[@]}"; do
     echo "Cloning ${repo}..."
     git clone git@github.com:miloskec/${repo}.git
     cd ${repo}
-    git checkout $branch_name
+    # check if with_ingress is true and branch_name is kubernetes-example
+    if [[ "$with_ingress" == true && "$branch_name" == "kubernetes-example" ]]; then
+        git checkout kubernetes-ingress-example
+    else
+        git checkout $branch_name
+    fi
     cp .env.example .env
     cd -
 done

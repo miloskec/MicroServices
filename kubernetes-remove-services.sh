@@ -16,7 +16,7 @@ delete_k8s_resources() {
     local service_dir=$1
     shift
     # Navigate to the service directory
-    pushd "$service_dir" > /dev/null
+    pushd "$service_dir" >/dev/null
 
     # Iterate over the files and attempt to delete resources
     for file in "$@"; do
@@ -29,11 +29,24 @@ delete_k8s_resources() {
     done
 
     # Return to the previous directory
-    popd > /dev/null
+    popd >/dev/null
 }
 
 # Main function to process all services
 main() {
+    # Ask if the user wants to install with Ingress
+    echo "Is ingress enabled? (yes/no)"
+    read install_with_ingress
+
+    if [[ "$install_with_ingress" == "yes" ]]; then
+        echo "Removing ingress..."
+        if kubectl delete -f gateway-ingress.yaml; then
+            echo "Successfully deleted gateway-ingress.yaml"
+        else
+            echo "Failed to delete gateway-ingress.yaml or it may not exist"
+        fi
+    fi
+
     for service in "${!services[@]}"; do
         echo "Processing $service..."
         delete_k8s_resources "$service" ${services[$service]}

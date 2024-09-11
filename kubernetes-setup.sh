@@ -13,8 +13,8 @@ apply_k8s_configs() {
     done
 }
 
-# Function to wait for MySQL service to become ready
-wait_for_mysql() {
+# Function to wait for service to become ready
+wait_for_service() {
     local service=$1
     echo "Waiting for service $service to be ready..."
     sleep 10
@@ -88,27 +88,45 @@ check_secret() {
         exit 1
     fi
 }
+
+check_config() {
+    if kubectl get configmap nginx-scripts-config -n default > /dev/null 2>&1; then
+        echo "Configmap nginx-scripts-config exists in the namespace default."
+    else
+        echo "Configmap nginx-scripts-config does not exist in the namespace default."
+        exit 1
+    fi
+
+    if kubectl get configmap local-config -n default > /dev/null 2>&1; then
+        echo "Configmap local-config exists in the namespace default."
+    else
+        echo "Configmap local-config does not exist in the namespace default."
+        exit 1
+    fi
+}
 # Main script execution
 main() {
-    # Check if secret is set
+    # Check if secret and configs are set
     check_secret
+    # check_config
     # Kafka
     apply_k8s_configs "kafka" zookeeper-deployment-service.yaml kafka-deployment-service.yaml
     # Gateway
     apply_k8s_configs "gateway" memcached-deployment-service.yaml mysql-gateway-deployment-service.yaml 
-    wait_for_mysql "mysql"
+    wait_for_service "mysql"
     apply_k8s_configs "gateway" gateway-deployment-service.yaml
+    
     # Authentication
     apply_k8s_configs "authentication" mysql-authentication-deployment-service.yaml 
-    wait_for_mysql "mysql-authentication"
+    wait_for_service "mysql-authentication"
     apply_k8s_configs "authentication" authentication-deployment-service.yaml
     # Authorization
     apply_k8s_configs "authorization" mysql-authorization-deployment-service.yaml 
-    wait_for_mysql "mysql-authorization"
+    wait_for_service "mysql-authorization"
     apply_k8s_configs "authorization" authorization-deployment-service.yaml
     # Profile
     apply_k8s_configs "profile" mysql-profile-deployment-service.yaml 
-    wait_for_mysql "mysql-profile"
+    wait_for_service "mysql-profile"
     apply_k8s_configs "profile" profile-deployment-service.yaml
     # Datadog
     apply_k8s_configs "datadog" datadoghq.com_datadogagents.yaml 
@@ -120,14 +138,18 @@ main() {
     sleep 30
     create_kafka_topics
     # Run the code after 1 minute to ensure that the kafka is configured up and running
-    wait_for_mysql "gateway"
+    wait_for_service "gateway"
     setup_service gateway
-    wait_for_mysql "authentication"
+    wait_for_service "authentication"
     setup_service authentication
-    wait_for_mysql "authorization"
+    wait_for_service "authorization"
     setup_service authorization
-    wait_for_mysql "profile"
+    wait_for_service "profile"
     setup_service profile
+    echo "All services are set up successfully."
+    # Gateway Ingress
+    echo "Applying Gateway Ingress..."
+    apply_k8s_configs "gateway" gateway-ingress.yaml
 }
 
 # Run the main function
