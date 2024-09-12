@@ -40,7 +40,7 @@ main() {
 
     if [[ "$install_with_ingress" == "yes" ]]; then
         echo "Removing ingress..."
-        if kubectl delete -f gateway-ingress.yaml; then
+        if kubectl delete -f gateway/gateway-ingress.yaml; then
             echo "Successfully deleted gateway-ingress.yaml"
         else
             echo "Failed to delete gateway-ingress.yaml or it may not exist"
