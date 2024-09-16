@@ -66,4 +66,10 @@ Please have in mind that in order to run **kubernetes-setup.sh** as a multinode 
   profile-deployment-5c6b78dcb-qfnz6                1/1     Running   2 (93s ago)     
   zookeeper-deployment-b756855fd-v8v76              1/1     Running   2 (86s ago)     
   ```
-  
+
+  ## Kubernetes - Secrets
+  ```sh
+  kubectl create secret generic datadog-secret --from-literal=api-key='xxx' --from-literal=app-key='xxx' -n default 
+  kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD='xxx' --from-literal=MYSQL_DATABASE='xxx' --from-literal=MYSQL_USER='xxx' --from-literal=MYSQL_PASSWORD='xxx'  -n default 
+  kubectl create secret generic mail-secret --from-literal=host='live.smtp.mailtrap.io' --from-literal=port='587' --from-literal=mailer='smtp' --from-literal=username='api' --from-literal=password='xxx' --from-literal=encryption='tls'  -n default
+  ```
