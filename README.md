@@ -73,3 +73,5 @@ Please have in mind that in order to run **kubernetes-setup.sh** as a multinode 
   kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD='xxx' --from-literal=MYSQL_DATABASE='xxx' --from-literal=MYSQL_USER='xxx' --from-literal=MYSQL_PASSWORD='xxx'  -n default 
   kubectl create secret generic mail-secret --from-literal=host='live.smtp.mailtrap.io' --from-literal=port='587' --from-literal=mailer='smtp' --from-literal=username='api' --from-literal=password='xxx' --from-literal=encryption='tls'  -n default
   ```
+
+  [Read more](https://medium.com/@milos.kecman/branch-overview-for-the-microservices-example-project-cadf4e135fa8 )
